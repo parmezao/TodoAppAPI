@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Todo.Domain.Handlers;
 using Todo.Domain.Infra.Contexts;
 using Todo.Domain.Infra.Repositories;
@@ -24,10 +25,30 @@ namespace Todo.Domain.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // Add CORS
+            services.AddCors(options => {
+                options.AddDefaultPolicy(
+                    builder => 
+                    {
+                        builder.WithOrigins("http://localhost:4200",
+                                            "http://todo.parmex.com.br",
+                                            "https://todo.parmex.com.br")
+                        .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .WithHeaders(
+                            HeaderNames.AccessControlAllowOrigin,
+                            HeaderNames.AccessControlAllowMethods,
+                            HeaderNames.AccessControlAllowHeaders,
+                            HeaderNames.ContentType,
+                            HeaderNames.Origin,
+                            HeaderNames.Accept);
+                    });
+            });
+
             services.AddControllers();
 
-            services.AddDbContext<DataContext>(opt => opt.UseInMemoryDatabase("Database"));
-            // services.AddDbContext<DataContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("connectionString")));
+            //services.AddDbContext<DataContext>(opt => opt.UseInMemoryDatabase("Database"));
+            //services.AddDbContext<DataContext>(opt => opt.UseSqlServer(Configuration.GetConnectionString("connectionString")));
+            services.AddDbContext<DataContext>(opt => opt.UseMySql(Configuration.GetConnectionString("connectionString")));
 
             services.AddTransient<ITodoRepository, TodoRepository>();
             services.AddTransient<TodoHandler, TodoHandler>();
@@ -36,13 +57,13 @@ namespace Todo.Domain.Api
                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options =>
                {
-                   options.Authority = "https://securetoken.google.com/project-1064011784157549102";
+                   options.Authority = "https://securetoken.google.com/todo-21537";
                    options.TokenValidationParameters = new TokenValidationParameters
                    {
                        ValidateIssuer = true,
-                       ValidIssuer = "https://securetoken.google.com/project-1064011784157549102",
+                       ValidIssuer = "https://securetoken.google.com/todo-21537",
                        ValidateAudience = true,
-                       ValidAudience = "project-1064011784157549102",
+                       ValidAudience = "todo-21537",
                        ValidateLifetime = true
                    };
                });
@@ -56,6 +77,7 @@ namespace Todo.Domain.Api
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            //app.UseCors();
             app.UseCors(x => x
                 .AllowAnyOrigin()
                 .AllowAnyMethod()

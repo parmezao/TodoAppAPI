@@ -12,6 +12,11 @@ namespace Todo.Domain.Tests.Repositories
 
         }
 
+        public bool Delete(TodoItem todo)
+        {
+            return true;
+        }
+
         public IEnumerable<TodoItem> GetAll(string user)
         {
             throw new NotImplementedException();

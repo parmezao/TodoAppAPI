@@ -24,6 +24,13 @@ namespace Todo.Domain.Infra.Repositories
             _context.SaveChanges();
         }
 
+        public bool Delete(TodoItem todo)
+        {
+            _context.Todos.Remove(todo);
+            _context.SaveChanges();
+            return true;
+        }
+
         public IEnumerable<TodoItem> GetAll(string user)
         {
             return _context.Todos

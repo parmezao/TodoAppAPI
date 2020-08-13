@@ -12,7 +12,8 @@ namespace Todo.Domain.Handlers
         IHandler<CreateTodoCommand>,
         IHandler<UpdateTodoCommand>,
         IHandler<MarkTodoAsDoneCommand>,
-        IHandler<MarkTodoAsUndoneCommand>
+        IHandler<MarkTodoAsUndoneCommand>,
+        IHandler<DeleteTodoCommand>
     {
         private readonly ITodoRepository _repository;
 
@@ -48,8 +49,9 @@ namespace Todo.Domain.Handlers
             // Recupera o TodoItem (Rehidratação)
             var todo = _repository.GetById(command.Id, command.User);
 
-            // Altera o título
+            // Altera o título e a data
             todo.UpdateTitle(command.Title);
+            todo.UpdateDate(command.Date);
 
             // Salva no banco
             _repository.Update(todo);
@@ -96,6 +98,23 @@ namespace Todo.Domain.Handlers
 
             // Retorna o resultado
             return new GenericCommandResult(true, "Tarefa salva", todo);
+        }
+
+        public ICommandResult Handle(DeleteTodoCommand command)
+        {
+            // Fail Fast Validation
+            command.Validate();
+            if (command.Invalid)
+                return new GenericCommandResult(false, "Ops, parece que sua tarefa está errada!", command.Notifications);
+
+            // Recupera o TodoItem
+            var todo = _repository.GetById(command.Id, command.User);
+
+            // Deleta no banco
+            _repository.Delete(todo);
+
+            // Retorna o resultado
+            return new GenericCommandResult(true, "Tarefa Excluída", todo);
         }
     }
 }
