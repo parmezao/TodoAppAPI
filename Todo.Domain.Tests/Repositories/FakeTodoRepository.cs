@@ -34,10 +34,15 @@ namespace Todo.Domain.Tests.Repositories
 
         public TodoItem GetById(Guid id, string user)
         {
-            return new TodoItem("Titulo Aqui", "André Baltieri", DateTime.Now);
+            return new TodoItem("Titulo Aqui", "Wagner Parmezao", DateTime.Now);
         }
 
         public IEnumerable<TodoItem> GetByPeriod(string user, DateTime date, bool done)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<TodoItem> GetByPeriod(string user, DateTime beginDate, DateTime endDate, bool done)
         {
             throw new NotImplementedException();
         }

@@ -28,5 +28,13 @@ namespace Todo.Domain.Queries
                 x.Done == done &&
                 x.Date.Date == date.Date;
         }
+
+        public static Expression<Func<TodoItem, bool>> GetByPeriod(string user, DateTime beginDate, DateTime endDate, bool done)
+        {
+            return x =>
+                x.User == user &&
+                x.Done == done &&
+                (x.Date >= beginDate && x.Date.Date <= endDate);
+        }
     }
 }

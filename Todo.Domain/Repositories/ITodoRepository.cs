@@ -14,5 +14,6 @@ namespace Todo.Domain.Repositories
         IEnumerable<TodoItem> GetAllDone(string user);
         IEnumerable<TodoItem> GetAllUndone(string user);
         IEnumerable<TodoItem> GetByPeriod(string user, DateTime date, bool done);
+        IEnumerable<TodoItem> GetByPeriod(string user, DateTime beginDate, DateTime endDate, bool done);
     }
 }

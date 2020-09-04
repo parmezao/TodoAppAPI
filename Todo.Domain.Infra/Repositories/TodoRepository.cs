@@ -70,6 +70,14 @@ namespace Todo.Domain.Infra.Repositories
                 .OrderBy(x => x.Date);
         }
 
+        public IEnumerable<TodoItem> GetByPeriod(string user, DateTime beginDate, DateTime endDate, bool done)
+        {
+            return _context.Todos
+                .AsNoTracking()
+                .Where(TodoQueries.GetByPeriod(user, beginDate, endDate, done))
+                .OrderBy(x => x.Date);
+        }
+
         public void Update(TodoItem todo)
         {
             _context.Entry(todo).State = EntityState.Modified;

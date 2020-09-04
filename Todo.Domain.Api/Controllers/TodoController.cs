@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Todo.Domain.Api.Extensions;
 using Todo.Domain.Commands;
 using Todo.Domain.Entities;
@@ -17,14 +19,35 @@ namespace Todo.Api.Controllers
     [AllowSameSite]
     public class TodoController : ControllerBase
     {
-        [Route("")]
+        private readonly ILogger<TodoController> _logger;
+
+        public TodoController(ILogger<TodoController> logger)
+        {
+            _logger = logger;
+        }
+
+        [Route("alert")]
         [HttpGet]
-        public IEnumerable<TodoItem> GetAll(
+        public IEnumerable<TodoItem> Alert(
             [FromServices] ITodoRepository repository
         )
         {
             var user = User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
-            return repository.GetAll(user);
+            return repository.GetByPeriod(user, DateTime.Now, DateTime.Now.AddMinutes(10), false); // Período de 10 minutos
+        }        
+
+        [Route("")]
+        [HttpGet]
+        public IEnumerable<TodoItem> GetAll(
+           [FromServices] ITodoRepository repository
+        )
+        {         
+           var user = User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
+
+           var remoteIP = HttpContext.Connection.RemoteIpAddress.ToString();
+           _logger.LogInformation($"LogTodoAPI - RemoteIP: {remoteIP}");
+
+           return repository.GetAll(user);            
         }
 
         [Route("done")]
@@ -113,6 +136,13 @@ namespace Todo.Api.Controllers
             command.User = User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
             return (GenericCommandResult)handler.Handle(command);
         }
+
+        // [Route("")]
+        // [HttpPost]
+        // public IActionResult Create()
+        // {            
+        //     return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+        // }        
 
         [Route("")]
         [HttpPut]
