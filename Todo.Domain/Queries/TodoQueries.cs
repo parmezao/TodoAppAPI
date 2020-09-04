@@ -34,7 +34,7 @@ namespace Todo.Domain.Queries
             return x =>
                 x.User == user &&
                 x.Done == done &&
-                (x.Date >= beginDate && x.Date.Date <= endDate);
+                (x.Date >= beginDate && x.Date <= endDate);
         }
     }
 }
