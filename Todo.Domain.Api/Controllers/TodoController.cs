@@ -28,6 +28,7 @@ namespace Todo.Api.Controllers
 
         [Route("alert")]
         [HttpGet]
+        [AllowAnonymous]
         public IEnumerable<TodoItem> Alert(
             [FromServices] ITodoRepository repository
         )
