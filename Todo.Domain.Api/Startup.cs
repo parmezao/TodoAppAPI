@@ -67,6 +67,8 @@ namespace Todo.Domain.Api
                        ValidateLifetime = true
                    };
                });
+
+            services.AddHttpClient();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

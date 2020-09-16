@@ -1,9 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.IIS.Core;
 using Microsoft.Extensions.Logging;
 using Todo.Domain.Api.Extensions;
 using Todo.Domain.Commands;
@@ -15,7 +21,7 @@ namespace Todo.Api.Controllers
 {
     [ApiController]
     [Route("v1/todos")]
-    [Authorize]    
+    [Authorize]
     [AllowSameSite]
     public class TodoController : ControllerBase
     {
@@ -24,6 +30,54 @@ namespace Todo.Api.Controllers
         public TodoController(ILogger<TodoController> logger)
         {
             _logger = logger;
+        }
+
+        [Route("alert")]
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<GenericCommandResult> SendNotification(
+            [FromServices] IHttpClientFactory clientFactory,
+            [FromBody] PushNotificationCommand pushMessage
+        )
+        { 
+            var client = clientFactory.CreateClient();
+
+            var data = new
+            {
+                to = pushMessage.Token,
+                notification = new
+                {
+                    body = $"Você tem {pushMessage.Count} tarefa(s) que iniciará(ão) em 10 minutos...",
+                    title = $"ToDo - Olá {pushMessage.Name}!",
+                    click_action = "https://todo.parmex.com.br",
+                    content_available = true,
+                    priority = "high"
+                }
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://fcm.googleapis.com/fcm/send");
+            request.Headers.TryAddWithoutValidation("Authorization",
+                "key=AAAAWuHxpyo:APA91bHqAG2wPLo-pM3dVxQDdNJycmVmwX15EIBWa0h5-BRIZk23PUR0yGIRKbxeszFOZof5yV_aqCmAHrxKs-YkKP_q6g3GUp7Ya9UDy17pAR3jqQ71v_QHYu3lHx2gLc2eYZw0ZpbL");
+
+            var jsonBody = new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json");
+            request.Content = jsonBody;
+
+            try
+            {
+                var response = await client.SendAsync(request);
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    return new GenericCommandResult(true, "OK", new { });
+                }
+                else
+                {
+                    return new GenericCommandResult(false, "Erro", new { statusCode = response.StatusCode });
+                }
+            }
+            catch (Exception ex)
+            {
+                return new GenericCommandResult(false, ex.Message, new { });
+            }
         }
 
         [Route("alert")]
@@ -136,14 +190,7 @@ namespace Todo.Api.Controllers
         {
             command.User = User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
             return (GenericCommandResult)handler.Handle(command);
-        }
-
-        // [Route("")]
-        // [HttpPost]
-        // public IActionResult Create()
-        // {            
-        //     return new StatusCodeResult(StatusCodes.Status500InternalServerError);
-        // }        
+        }    
 
         [Route("")]
         [HttpPut]
